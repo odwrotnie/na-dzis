@@ -84,8 +84,9 @@ i różni się trzema rzeczami:
 
 - zamiast pytać, bierze podpowiedź tytułu,
 - zamiast przypomnienia zwraca JSON z tym, co by zapisała,
-- po każdej akcji dopisuje krok do śladu `na-dzis-testy/<czas>.txt` w iCloud Drive/Skróty,
-  więc przy błędzie widać, na którym kroku stanęło. Działa też przy uruchomieniu z iPhone'a.
+- po każdej akcji dopisuje krok do śladu, który trafia do raportu
+  (`na-dzis-testy/<czas>.json` w iCloud Drive/Skróty). Działa też przy uruchomieniu
+  z iPhone'a, więc z Maca widać, co naprawdę przysłał np. Chrome.
 
 [`testy.py`](testy.py) stawia lokalny serwer ze stronami testowymi i uruchamia skrót
 przez `shortcuts run` dla scenariuszy: tekst, link, link bez tytułu, martwy link,

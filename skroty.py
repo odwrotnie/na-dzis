@@ -27,9 +27,9 @@ from pathlib import Path
 NAZWA = "Na dziś"
 LISTA = "Urgent"
 TYTUL_OBRAZU_TESTOWEGO = "TEST obraz"  # testy nie mają okna z pytaniem o tytuł
-KATALOG_TESTOW = "na-dzis-testy"  # w iCloud Drive/Skróty
-SLADY = (Path.home() / "Library/Mobile Documents/iCloud~is~workflow~my~workflows/Documents"
-         / KATALOG_TESTOW)  # ten sam katalog widziany z Maca
+# raporty testów w iCloud Drive/Skróty, na Macu: ~/Library/Mobile Documents/
+# iCloud~is~workflow~my~workflows/Documents (widać tam też uruchomienia z iPhone'a)
+KATALOG_TESTOW = "na-dzis-testy"
 KATALOG = Path(__file__).resolve().parent
 DIST = KATALOG / "dist"
 PLIK_WERSJI = KATALOG / "wersja-testowa.json"
@@ -86,7 +86,7 @@ def jako_url(zmienna):
 
 class Skrot:
     def __init__(self, slad=False):
-        """`slad` (testy): każdy wynik akcji trafia do na-dzis-testy/<czas>.txt."""
+        """`slad` (testy): każdy wynik akcji trafia do śladu, który raport zapisuje."""
         self.akcje = []
         self.uuidy = 0
         self.slad = slad
@@ -123,20 +123,15 @@ class Skrot:
         return self.akcja("gettext", "Tekst", WFTextActionText=tekst(*czesci))
 
     def loguj(self, etykieta, zmienna=None):
-        """Dopisuje linię do śladu i od razu zapisuje cały ślad, żeby przetrwał błąd
-        w dalszym kroku."""
+        """Dopisuje linię do śladu (zmienna w pamięci). Plik zapisuje dopiero raport:
+        każdy zapis to pytanie Skrótów o zgodę, więc zapis po każdym kroku to kilkanaście
+        kliknięć na przebieg. Gdy coś padnie po drodze, Skróty i tak podają, która akcja."""
         if not self.slad:
             return
         self.krok += 1
         linia = [f"\n{self.krok:02}. {etykieta}"] + ([": ", zmienna] if zmienna else [])
         calosc = self._dopisz("gettext", "Tekst", WFTextActionText=tekst(SLAD, *linia))
         self._dopisz("setvariable", WFVariableName=SLAD["VariableName"], WFInput=zalacznik(calosc))
-        self.zapisz_plik(calosc, ".txt")
-
-    def zapisz_plik(self, zmienna, rozszerzenie):
-        self._dopisz("documentpicker.save", WFInput=zalacznik(zmienna), WFAskWhereToSave=False,
-                     WFSaveFileOverwrite=True,
-                     WFFileDestinationPath=tekst(f"{KATALOG_TESTOW}/", self.czas, rozszerzenie))
 
     def jezeli_ma_wartosc(self, zmienna, tak, inaczej):
         """If/Otherwise; zwraca wynik bloku (wynik ostatniej akcji wykonanej gałęzi)."""
@@ -208,14 +203,16 @@ def liczba(s, zmienna):
 
 
 def raport(s, pola):
-    """Tylko testy: pola jako JSON - obok śladu w iCloud Drive/Skróty/na-dzis-testy
-    (widać tam też uruchomienia z iPhone'a) i jako wynik skrótu (dla `shortcuts run -o`)."""
+    """Tylko testy: pola i ślad jako JSON, jednym zapisem do KATALOG_TESTOW
+    i jako wynik skrótu (dla `shortcuts run -o`)."""
     slownik = s.akcja("dictionary", "Słownik", WFItems={
         "Value": {"WFDictionaryFieldValueItems": [
             {"WFItemType": 0, "WFKey": tekst(klucz), "WFValue": tekst(wartosc)}
-            for klucz, wartosc in pola.items() if wartosc is not None]},
+            for klucz, wartosc in {**pola, "slad": SLAD}.items() if wartosc is not None]},
         "WFSerializationType": "WFDictionaryFieldValue"})
-    s.zapisz_plik(slownik, ".json")
+    s.akcja("documentpicker.save", WFInput=zalacznik(slownik), WFAskWhereToSave=False,
+            WFSaveFileOverwrite=True,
+            WFFileDestinationPath=tekst(f"{KATALOG_TESTOW}/", s.czas, ".json"))
     s.akcja("output", WFOutput=tekst(slownik))
 
 

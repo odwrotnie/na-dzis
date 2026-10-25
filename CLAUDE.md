@@ -32,8 +32,8 @@ Definicje akcji (klucze, wartości enumów) są w dyld shared cache:
 - Import nieraz dodaje kopię ("… 1") zamiast zastąpić, stąd `TEST Na dziś vN`
   (`wersja-testowa.json`: numer, sha1, tryb z przypomnieniami).
 - `shortcuts run -i plik.txt` podaje typ Tekst, nie plik ani URL.
-- Ślady i raporty testów: `SLADY` w `skroty.py` (iCloud Drive/Skróty/na-dzis-testy);
-  działa też dla uruchomień z iPhone'a. Odczyt z iCloud bywa wolny.
+- Raporty testów (z polem `slad`): iCloud Drive/Skróty/na-dzis-testy, także
+  z uruchomień na iPhonie. Każdy zapis pliku to pytanie o zgodę, stąd jeden na przebieg.
 - Importu nie da się zrobić z CLI: `open plik.shortcut` i klik "Dodaj skrót".
 - Podpisany plik ma w certyfikacie tylko anonimowy identyfikator Apple (bez Apple ID),
   można go publikować.

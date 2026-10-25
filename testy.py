@@ -21,7 +21,7 @@ import threading
 import unicodedata
 import zlib
 
-from skroty import KATALOG, LISTA, SLADY, TYTUL_OBRAZU_TESTOWEGO, nazwa_testowa, wersja_testowa
+from skroty import KATALOG, LISTA, TYTUL_OBRAZU_TESTOWEGO, nazwa_testowa, wersja_testowa
 
 DANE = KATALOG / "build" / "testy"
 PORT = 8765
@@ -106,12 +106,6 @@ def przygotuj():
     ]
 
 
-def nowy_slad(przed):
-    """Ślad (txt) zapisany przez skrót w czasie przebiegu, jeśli powstał."""
-    nowe = sorted(set(SLADY.glob("*.txt")) - przed)
-    return nowe[-1].read_text().strip() if nowe else "(skrót nie zapisał śladu)"
-
-
 def identyfikator(nazwa):
     """UUID zainstalowanego skrótu. Po nazwie się nie da: Skróty trzymają ją w NFD
     ("s" + kreska), a dwa importy dają dwa skróty o tej samej nazwie, których CLI
@@ -152,13 +146,12 @@ def main():
     print(f"{nazwa}{' (z przypomnieniami)' if stan['przypomnienia'] else ''}\n")
     bledy = 0
     for scenariusz, wejscia, oczekiwane in scenariusze:
-        przed = set(SLADY.glob("*.txt"))
         raport, blad = uruchom(skrot, wejscia)
-        if blad:
+        if blad:  # Skróty podają w błędzie, która akcja padła
             bledy += 1
             print(f"BŁĄD  {scenariusz}: {blad}")
-            print(textwrap.indent(nowy_slad(przed), " " * 8))
             continue
+        slad = raport.pop("slad", "").strip()
         rozne = {k: w for k, w in {**wspolne, **oczekiwane}.items()
                  if raport.get(k, "") not in (w if isinstance(w, tuple) else (w,))}
         bledy += bool(rozne)
@@ -168,7 +161,7 @@ def main():
             print(f"        {klucz}={raport.get(klucz, '')!r}{uwaga}")
         if rozne or argumenty.v:
             print("        ślad:")
-            print(textwrap.indent(nowy_slad(przed), " " * 10))
+            print(textwrap.indent(slad, " " * 10))
     print(f"\n{len(scenariusze) - bledy}/{len(scenariusze)} OK")
     return 1 if bledy else 0
 
