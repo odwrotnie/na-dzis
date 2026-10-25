@@ -12,6 +12,7 @@ import functools
 import html
 import http.server
 import json
+import re
 import struct
 import subprocess
 import sys
@@ -111,12 +112,23 @@ def nowy_slad(przed):
     return nowe[-1].read_text().strip() if nowe else "(skrót nie zapisał śladu)"
 
 
-def uruchom(nazwa, wejscia):
+def identyfikator(nazwa):
+    """UUID zainstalowanego skrótu. Po nazwie się nie da: Skróty trzymają ją w NFD
+    ("s" + kreska), a dwa importy dają dwa skróty o tej samej nazwie, których CLI
+    wtedy nie znajduje. Ta sama nazwa vN to ta sama treść, więc wystarczy pierwszy."""
+    lista = subprocess.run(["shortcuts", "list", "--show-identifiers"],
+                           capture_output=True, text=True, check=True).stdout
+    for linia in lista.splitlines():
+        dopasowanie = re.fullmatch(r"(.*) \(([0-9A-F-]{36})\)", linia)
+        if dopasowanie and unicodedata.normalize("NFC", dopasowanie[1]) == nazwa:
+            return dopasowanie[2]
+    sys.exit(f"Nie ma skrótu „{nazwa}”: zaimportuj plik z dist/test/")
+
+
+def uruchom(skrot, wejscia):
     wyjscie = DANE / "wynik.json"
     wyjscie.unlink(missing_ok=True)
-    # Skróty biorą nazwę z pliku zapisanego przez `shortcuts sign` w NFD ("s" + kreska),
-    # a CLI szuka jej dosłownie
-    polecenie = ["shortcuts", "run", unicodedata.normalize("NFD", nazwa), "-o", str(wyjscie)]
+    polecenie = ["shortcuts", "run", skrot, "-o", str(wyjscie)]
     for w in wejscia:
         polecenie += ["-i", str(w)]
     proces = subprocess.run(polecenie, capture_output=True, text=True, timeout=120)
@@ -133,6 +145,7 @@ def main():
 
     stan = wersja_testowa()
     nazwa = nazwa_testowa(stan["wersja"])
+    skrot = identyfikator(nazwa)
     wspolne = {"lista": LISTA, "alarm": ("Tak", "Yes")} if stan["przypomnienia"] else {}
     scenariusze = [s for s in przygotuj()
                    if not argumenty.filtry or any(f in s[0] for f in argumenty.filtry)]
@@ -140,7 +153,7 @@ def main():
     bledy = 0
     for scenariusz, wejscia, oczekiwane in scenariusze:
         przed = set(SLADY.glob("*.txt"))
-        raport, blad = uruchom(nazwa, wejscia)
+        raport, blad = uruchom(skrot, wejscia)
         if blad:
             bledy += 1
             print(f"BŁĄD  {scenariusz}: {blad}")

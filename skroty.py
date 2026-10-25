@@ -261,8 +261,10 @@ def na_dzis(test=False, przypomnienia=True):
                                WFItemSpecifier="First Item", WFInput=zalacznik(adresy)))
         nazwa = s.akcja("getitemname", "Nazwa", WFInput=zalacznik(url), GetWebPageTitle=True)
         # tytuł przychodzi surowy z HTML-a ("&amp;"): odczyt jako plik .html go dekoduje
-        # ("Utwórz tekst sformatowany z HTML" zwraca pusto)
-        plik_html = s.akcja("setitemname", "Plik HTML", WFInput=zalacznik(nazwa),
+        # ("Utwórz tekst sformatowany z HTML" zwraca pusto). Bez deklaracji kodowania
+        # iOS czyta ten plik jako Windows-1252 ("szybkoÅ›ci" zamiast "szybkości")
+        html_tytulu = s.napis('<meta charset="utf-8">', nazwa)
+        plik_html = s.akcja("setitemname", "Plik HTML", WFInput=zalacznik(html_tytulu),
                             WFName=tekst("tytul.html"))
         tytul_strony = pobierz_tekst(s, plik_html)
         podpowiedz = s.tekst_jezeli(tytul_strony, tytul_strony, url)

@@ -69,6 +69,9 @@ Wszystko sprawdzone w testach na macOS 26 / Skróty 7.0:
 - **„Pobierz nazwę” z opcją tytułu strony daje surowy HTML** (`&amp;`). „Utwórz tekst
   sformatowany z HTML” zwraca pusto; dekoduje zapisanie tytułu jako `tytul.html`
   i odczyt „Pobierz tekst”. Strona bez `<title>` daje końcówkę adresu.
+- **Plik HTML bez deklaracji kodowania iPhone czyta jako Windows-1252** („szybkoÅ›ci”
+  zamiast „szybkości”), a Mac jako UTF-8, więc testy na Macu tego nie łapią. Stąd
+  `<meta charset="utf-8">` przed tytułem.
 - **„Dopasuj tekst” bierze wejście z klucza `text`**, nie `WFInput`.
 - **Lista kilku adresów wstawiona w pole URL daje pusty URL**, stąd zawsze pierwszy adres.
 

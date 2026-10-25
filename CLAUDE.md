@@ -27,7 +27,8 @@ Definicje akcji (klucze, wartości enumów) są w dyld shared cache:
 ## Środowisko
 
 - `shortcuts sign` zapisuje plik z nazwą w NFD ("ś" rozłożone), Skróty biorą nazwę
-  z pliku, a CLI szuka jej dosłownie (stąd normalizacja w `testy.py`).
+  z pliku, a CLI szuka jej dosłownie. Dwa importy dają dwa skróty o tej samej nazwie
+  i wtedy `shortcuts run <nazwa>` nie znajduje żadnego: `testy.py` uruchamia po UUID.
 - Import nieraz dodaje kopię ("… 1") zamiast zastąpić, stąd `TEST Na dziś vN`
   (`wersja-testowa.json`: numer, sha1, tryb z przypomnieniami).
 - `shortcuts run -i plik.txt` podaje typ Tekst, nie plik ani URL.
