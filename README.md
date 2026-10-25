@@ -23,7 +23,7 @@ strony, więc skrót, który najpierw szuka obrazów, zapisuje zrzut i gubi URL.
 
 ## Instalacja
 
-1. Pobierz `Na dziś.shortcut` z [Releases](https://github.com/odwrotnie/na-dzis/releases/latest)
+1. Pobierz [`Na dziś.shortcut`](https://github.com/odwrotnie/na-dzis/raw/main/Na%20dzi%C5%9B.shortcut)
    i otwórz go na iPhonie albo Macu, potem „Dodaj skrót”.
 2. W Przypomnieniach musi istnieć lista **Urgent**. Inna nazwa: zmień `LISTA`
    w [`skroty.py`](skroty.py) i zbuduj skrót sam.
@@ -32,7 +32,7 @@ strony, więc skrót, który najpierw szuka obrazów, zapisuje zrzut i gubi URL.
 Budowanie samemu (macOS ze Skrótami i zalogowanym iCloud, bo podpis idzie przez Apple):
 
 ```bash
-python3 skroty.py          # dist/Na dziś.shortcut
+python3 skroty.py          # Na dziś.shortcut
 ```
 
 ## Jak to działa

@@ -10,7 +10,7 @@ i dodaje przypomnienie do listy "Urgent" z alertem na bieżącą datę:
 Najpierw link, dopiero potem obraz: Chrome na iOS udostępnia link razem ze
 zrzutem strony, więc odwrotna kolejność gubiła URL.
 
-  python3 skroty.py                         # dist/Na dziś.shortcut - do importu
+  python3 skroty.py                         # Na dziś.shortcut - do importu (w repo)
   python3 skroty.py --test                  # dist/test/TEST Na dziś vN.shortcut - zamiast
                                             # przypomnienia zapisuje JSON (patrz testy.py)
   python3 skroty.py --test --przypomnienia  # wersja testowa z prawdziwymi przypomnieniami
@@ -306,8 +306,10 @@ def podbij_wersje_testowa(tresc, przypomnienia):
 
 def zbuduj(test, przypomnienia):
     tresc = plistlib.dumps(na_dzis(test, przypomnienia), fmt=plistlib.FMT_BINARY)
+    # docelowy leży w repo: release na GitHubie zmienia nazwę pliku ("Na.dzis"),
+    # a z niej Skróty biorą nazwę skrótu
     nazwa, cel = ((podbij_wersje_testowa(tresc, przypomnienia), DIST / "test") if test
-                  else (NAZWA, DIST))
+                  else (NAZWA, KATALOG))
     roboczy = KATALOG / "build" / "roboczy.shortcut"  # sign wymaga rozszerzenia .shortcut
     roboczy.parent.mkdir(parents=True, exist_ok=True)
     cel.mkdir(parents=True, exist_ok=True)
