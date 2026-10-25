@@ -1,113 +1,114 @@
-# Na dziś
+# Share to Reminders
 
-Skrót iOS do arkusza udostępniania: udostępniasz **link, zdjęcie albo tekst**, a on
-dodaje przypomnienie „na dziś” z alertem. Skrót jest generowany w Pythonie
-i testowany end-to-end na Macu przez `shortcuts run`, bez klikania w edytorze Skrótów.
+An iOS share-sheet shortcut: share a **link, photo or text** and it adds a reminder
+for today with an alert. The shortcut is generated from Python and tested end-to-end
+on a Mac with the `shortcuts` CLI, without clicking through the Shortcuts editor.
 
-*An iOS share-sheet shortcut that turns a link, photo or text into a reminder for today.
-Generated from Python and tested end-to-end with the macOS `shortcuts` CLI.*
+The shortcut itself is called **"Na dziś"** (Polish for "for today"), and the code
+and comments are in Polish; everything else should be readable from this page.
 
-## Co robi
+## What it does
 
-| Udostępniasz | Podpowiedź tytułu | W przypomnieniu |
+| You share | Title suggestion | In the reminder |
 |---|---|---|
-| link (Chrome, Safari, dowolna aplikacja) | tytuł strony, a gdy strona nie odpowiada, sam URL | URL w polu URL |
-| zdjęcie, zrzut ekranu | puste pole | dołączony obraz |
-| tekst | udostępniony tekst | tylko tytuł |
+| a link (Chrome, Safari, any app) | the page title, or the URL if the page does not respond | the URL in the URL field |
+| a photo or screenshot | empty | the attached image |
+| text | the shared text | title only |
 
-Za każdym razem skrót pyta o tytuł, z podpowiedzią do zatwierdzenia jednym „OK”.
-Przypomnienie trafia na listę **Urgent** z alertem na bieżącą chwilę.
+Every time, the shortcut asks for the title with a suggestion you confirm with one tap.
+The reminder goes to the **Urgent** list with an alert set to now.
 
-Link ma pierwszeństwo przed obrazem. Chrome na iOS udostępnia link razem ze zrzutem
-strony, więc skrót, który najpierw szuka obrazów, zapisuje zrzut i gubi URL.
+Links win over images. Chrome on iOS shares a link together with a screenshot of the
+page, so a shortcut that looks for images first saves the screenshot and loses the URL.
 
-## Instalacja
+## Install
 
-1. Pobierz [`Na dziś.shortcut`](https://github.com/odwrotnie/na-dzis/raw/main/Na%20dzi%C5%9B.shortcut)
-   i otwórz go na iPhonie albo Macu, potem „Dodaj skrót”.
-2. W Przypomnieniach musi istnieć lista **Urgent**. Inna nazwa: zmień `LISTA`
-   w [`skroty.py`](skroty.py) i zbuduj skrót sam.
-3. Udostępnij coś i wybierz „Na dziś” w arkuszu udostępniania.
+1. Download [`Na dziś.shortcut`](https://github.com/odwrotnie/share-to-reminders/raw/main/Na%20dzi%C5%9B.shortcut)
+   and open it on an iPhone or a Mac, then tap "Add Shortcut".
+2. Reminders needs a list called **Urgent**. For another list, change `LISTA`
+   in [`skroty.py`](skroty.py) and build the shortcut yourself.
+3. Share something and pick "Na dziś" in the share sheet.
 
-Budowanie samemu (macOS ze Skrótami i zalogowanym iCloud, bo podpis idzie przez Apple):
+Building it yourself (macOS with Shortcuts and iCloud signed in, since Apple signs it):
 
 ```bash
 python3 skroty.py          # Na dziś.shortcut
 ```
 
-## Jak to działa
+## How it works
 
 ```mermaid
 flowchart TD
-    W["Wejście z arkusza udostępniania"] --> T["Pobierz tekst z wejścia"]
-    T --> A{"Adres http(s) w tekście?"}
-    A -- tak --> L1["Pierwszy adres jako URL"]
-    L1 --> L2["Pobierz nazwę: tytuł strony"]
-    L2 --> L3["Dekoduj encje HTML w tytule"]
-    L3 --> L4["Zapytaj o tytuł, podpowiedź: tytuł albo URL"]
-    L4 --> P1["Przypomnienie z URL"]
-    A -- nie --> O{"Rozszerzenie obrazka? (png, jpg, heic...)"}
-    O -- tak --> O1["Zapytaj o tytuł"] --> P2["Przypomnienie z obrazem"]
-    O -- nie --> X1["Zapytaj o tytuł, podpowiedź: tekst"] --> P3["Przypomnienie"]
+    W["Share sheet input"] --> T["Get Text from Input"]
+    T --> A{"http(s) address in the text?"}
+    A -- yes --> L1["First address as a URL"]
+    L1 --> L2["Get Name: page title"]
+    L2 --> L3["Decode HTML entities in the title"]
+    L3 --> L4["Ask for the title, suggestion: title or URL"]
+    L4 --> P1["Reminder with URL"]
+    A -- no --> O{"Image file extension? (png, jpg, heic...)"}
+    O -- yes --> O1["Ask for the title"] --> P2["Reminder with image"]
+    O -- no --> X1["Ask for the title, suggestion: the text"] --> P3["Reminder"]
 ```
 
-Generator ([`skroty.py`](skroty.py)) składa plist z kilku pomocników: `tekst()` buduje parametr tekstowy ze zmiennymi, `Skrot.jezeli_ma_wartosc()`
-blok Jeżeli/W przeciwnym razie, `dodaj_przypomnienie()` akcję przypomnienia. Nazwy
-kluczy parametrów pochodzą z definicji akcji zaszytych w systemie (dyld shared cache),
-a nie z domysłów.
+The generator ([`skroty.py`](skroty.py)) builds the plist from a few helpers: `tekst()`
+makes a text parameter with variables, `Skrot.jezeli_ma_wartosc()` an If/Otherwise block,
+`dodaj_przypomnienie()` the Add New Reminder action. Parameter keys come from the action
+definitions shipped with macOS (the dyld shared cache), not from guesswork.
 
-## Pułapki Skrótów, które to wymusiły
+## Shortcuts pitfalls behind this design
 
-Wszystko sprawdzone w testach na macOS 26 / Skróty 7.0:
+All confirmed by tests on macOS 26 / Shortcuts 7.0:
 
-- **„Pobierz URL-e z wejścia” nie zwraca nic**, nawet dla tekstu `https://example.com/`.
-  Dlatego adres wyciąga wyrażenie regularne z tekstu wejścia.
-- **„Pobierz obrazy z wejścia” robi obrazek z tekstu.** Skrót, który pyta „czy są
-  obrazy?”, wysyła każdy tekst ścieżką obrazu. Obraz rozpoznajemy po rozszerzeniu pliku.
-- **Wymuszenie typu URL na tekście bez adresu albo obrazku przerywa skrót błędem**,
-  zamiast zwrócić pustkę. Typ URL dostaje tylko jeden, już znaleziony adres.
-- **„Pobierz nazwę” z opcją tytułu strony daje surowy HTML** (`&amp;`). „Utwórz tekst
-  sformatowany z HTML” zwraca pusto; dekoduje zapisanie tytułu jako `tytul.html`
-  i odczyt „Pobierz tekst”. Strona bez `<title>` daje końcówkę adresu.
-- **Plik HTML bez deklaracji kodowania iPhone czyta jako Windows-1252** („szybkoÅ›ci”
-  zamiast „szybkości”), a Mac jako UTF-8, więc testy na Macu tego nie łapią. Stąd
-  `<meta charset="utf-8">` przed tytułem.
-- **„Dopasuj tekst” bierze wejście z klucza `text`**, nie `WFInput`.
-- **Lista kilku adresów wstawiona w pole URL daje pusty URL**, stąd zawsze pierwszy adres.
+- **"Get URLs from Input" returns nothing**, even for the text `https://example.com/`.
+  So the address comes from a regular expression over the input text.
+- **"Get Images from Input" turns text into an image.** A shortcut that asks "are there
+  images?" sends every text down the image path. Images are detected by file extension.
+- **Coercing text without an address, or an image, to URL stops the shortcut with an
+  error** instead of returning nothing. Only the one address already found is coerced.
+- **"Get Name" with the web page title option returns raw HTML** (`&amp;`). "Make Rich
+  Text from HTML" returns nothing; saving the title as `tytul.html` and reading it with
+  "Get Text from Input" decodes it. A page without `<title>` gives the end of the path.
+- **The iPhone reads an HTML file without a charset as Windows-1252** ("szybkoÅ›ci"
+  instead of "szybkości"), while the Mac reads it as UTF-8, so Mac tests do not catch it.
+  Hence `<meta charset="utf-8">` before the title.
+- **"Match Text" takes its input from the `text` key**, not `WFInput`.
+- **A list of several addresses in the URL field gives an empty URL**, so it always uses
+  the first one.
 
-Pełna lista, razem z drobiazgami środowiska, jest w [`CLAUDE.md`](CLAUDE.md).
+The full list, including environment quirks, is in [`CLAUDE.md`](CLAUDE.md) (Polish).
 
-## Testy
+## Tests
 
-`python3 skroty.py --test` buduje wersję testową, która ma tę samą logikę co docelowa
-i różni się trzema rzeczami:
+`python3 skroty.py --test` builds a test version with the same logic as the real one
+and three differences:
 
-- zamiast pytać, bierze podpowiedź tytułu,
-- zamiast przypomnienia zwraca JSON z tym, co by zapisała,
-- po każdej akcji dopisuje krok do śladu, który trafia do raportu
-  (`na-dzis-testy/<czas>.json` w iCloud Drive/Skróty). Działa też przy uruchomieniu
-  z iPhone'a, więc z Maca widać, co naprawdę przysłał np. Chrome.
+- instead of asking, it takes the title suggestion,
+- instead of a reminder, it returns JSON with what it would save,
+- after every action it appends a step to a trace that goes into the report
+  (`na-dzis-testy/<time>.json` in iCloud Drive/Shortcuts). This also works when run on
+  an iPhone, so you can see on the Mac what, say, Chrome really sent.
 
-[`testy.py`](testy.py) stawia lokalny serwer ze stronami testowymi i uruchamia skrót
-przez `shortcuts run` dla scenariuszy: tekst, link, link bez tytułu, martwy link,
-link w zdaniu, link z kropką na końcu, link + zrzut (jak z Chrome), link + tytuł + zrzut,
-obraz, prawdziwa strona z internetu.
+[`testy.py`](testy.py) serves local test pages and runs the shortcut with `shortcuts run`
+for these scenarios: text, link, link without a title, dead link, link inside a sentence,
+link followed by a full stop, link + screenshot (as from Chrome), link + title +
+screenshot, image, a real page from the internet.
 
 ```bash
-python3 skroty.py --test                   # zbuduj, zaimportuj w Skrótach
-python3 testy.py                           # wszystkie scenariusze
-python3 skroty.py --test --przypomnienia   # prawdziwe przypomnienia (tytuły z TEST)
-python3 testy.py tekst obraz               # wybrane; sprawdza też listę i alert
+python3 skroty.py --test                   # build, then import in Shortcuts
+python3 testy.py                           # all scenarios
+python3 skroty.py --test --przypomnienia   # real reminders (titles start with TEST)
+python3 testy.py tekst obraz               # selected ones; also checks list and alert
 ```
 
-`testy.py` sam wie, którą wersję zbudowano (z przypomnieniami czy bez), bo czyta to
-z `wersja-testowa.json`. Wersja testowa nazywa się `TEST Na dziś vN`. Import potrafi dodać kopię („… 1”) zamiast
-zastąpić skrót, a numer rośnie tylko przy zmianie treści (UUID-y akcji są deterministyczne,
-więc to samo źródło daje bajt w bajt ten sam plik).
+`testy.py` knows which version was built (with reminders or not) from
+`wersja-testowa.json`. The test version is called `TEST Na dziś vN`: an import can add a
+copy ("... 1") instead of replacing the shortcut, and the number only goes up when the
+content changes (action UUIDs are deterministic, so the same source gives a byte-identical
+file).
 
-Importu nie da się zrobić z wiersza poleceń: `open plik.shortcut` i kliknięcie
-„Dodaj skrót”.
+Importing cannot be done from the command line: `open file.shortcut` and click "Add Shortcut".
 
-## Licencja
+## License
 
 [MIT](LICENSE)
