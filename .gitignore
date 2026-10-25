@@ -1,0 +1,5 @@
+build/
+dist/
+wersja-testowa.json
+__pycache__/
+.DS_Store
